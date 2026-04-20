@@ -85,9 +85,9 @@ Rust
 Soroban SDK
 Stellar Blockchain
 
-(Optional)
+<img width="1919" height="897" alt="image" src="https://github.com/user-attachments/assets/ad76cf19-b704-4f66-a0a2-a16031b94c11" />
 
-ID Contract: CCE3QYYC2GRJKJOMHOILT2ASF6OW2WYNQC7UK5DNMVGLAQFLLO5ABBRA
 
+ID Contract: CD2FLTIZ5A5HFNEFAI6AWR5WIMAGBJ557D44PP7J52IHSUOIDM5RQR2Q
 React + Tailwind (Frontend)
 Freighter Wallet
