@@ -6,80 +6,102 @@ use soroban_sdk::{
 
 #[contracttype]
 #[derive(Clone, Debug)]
-pub struct Note {
+pub struct Task {
     id: u64,
     title: String,
-    content: String,
-    timestamp: u64,
+    completed: bool,
+    created_at: u64,
 }
 
-// Storage Keys
+// Storage key global counter
 const COUNTER: Symbol = symbol_short!("COUNTER");
 
 #[contract]
-pub struct NotesContract;
+pub struct TaskContract;
 
 #[contractimpl]
-impl NotesContract {
+impl TaskContract {
 
-    // 🔹 Get Notes per User
-    pub fn get_notes(env: Env, user: Address) -> Vec<Note> {
+    // 🔹 Ambil semua task milik user
+    pub fn get_tasks(env: Env, user: Address) -> Vec<Task> {
         user.require_auth();
 
         env.storage()
             .instance()
             .get(&user)
-            .unwrap_or(Vec::<Note>::new(&env))
+            .unwrap_or(Vec::<Task>::new(&env))
     }
 
-    // 🔹 Create Note
-    pub fn create_note(env: Env, user: Address, title: String, content: String) -> String {
+    // 🔹 Tambah task baru
+    pub fn create_task(env: Env, user: Address, title: String) -> String {
         user.require_auth();
 
-        if title.len() == 0 || content.len() == 0 {
-            return String::from_str(&env, "Title/content tidak boleh kosong");
+        if title.len() == 0 {
+            return String::from_str(&env, "Title tidak boleh kosong");
         }
 
-        let mut notes: Vec<Note> = env.storage()
+        let mut tasks: Vec<Task> = env.storage()
             .instance()
             .get(&user)
-            .unwrap_or(Vec::<Note>::new(&env));
+            .unwrap_or(Vec::<Task>::new(&env));
 
-        // ID counter global
         let mut id: u64 = env.storage().instance().get(&COUNTER).unwrap_or(0);
         id += 1;
         env.storage().instance().set(&COUNTER, &id);
 
-        let note = Note {
+        let task = Task {
             id,
             title,
-            content,
-            timestamp: env.ledger().timestamp(),
+            completed: false,
+            created_at: env.ledger().timestamp(),
         };
 
-        notes.push_back(note);
-        env.storage().instance().set(&user, &notes);
+        tasks.push_back(task);
+        env.storage().instance().set(&user, &tasks);
 
-        String::from_str(&env, "Note berhasil ditambahkan")
+        String::from_str(&env, "Task berhasil ditambahkan")
     }
 
-    // 🔹 Delete Note
-    pub fn delete_note(env: Env, user: Address, id: u64) -> String {
+    // 🔹 Tandai task selesai
+    pub fn complete_task(env: Env, user: Address, id: u64) -> String {
         user.require_auth();
 
-        let mut notes: Vec<Note> = env.storage()
+        let mut tasks: Vec<Task> = env.storage()
             .instance()
             .get(&user)
-            .unwrap_or(Vec::<Note>::new(&env));
+            .unwrap_or(Vec::<Task>::new(&env));
 
-        for i in 0..notes.len() {
-            if notes.get(i).unwrap().id == id {
-                notes.remove(i).unwrap();
-                env.storage().instance().set(&user, &notes);
-                return String::from_str(&env, "Note berhasil dihapus");
+        for i in 0..tasks.len() {
+            let mut task = tasks.get(i).unwrap();
+
+            if task.id == id {
+                task.completed = true;
+                tasks.set(i, task);
+                env.storage().instance().set(&user, &tasks);
+                return String::from_str(&env, "Task selesai");
             }
         }
 
-        String::from_str(&env, "Note tidak ditemukan")
+        String::from_str(&env, "Task tidak ditemukan")
+    }
+
+    // 🔹 Hapus task
+    pub fn delete_task(env: Env, user: Address, id: u64) -> String {
+        user.require_auth();
+
+        let mut tasks: Vec<Task> = env.storage()
+            .instance()
+            .get(&user)
+            .unwrap_or(Vec::<Task>::new(&env));
+
+        for i in 0..tasks.len() {
+            if tasks.get(i).unwrap().id == id {
+                tasks.remove(i).unwrap();
+                env.storage().instance().set(&user, &tasks);
+                return String::from_str(&env, "Task dihapus");
+            }
+        }
+
+        String::from_str(&env, "Task tidak ditemukan")
     }
 }
